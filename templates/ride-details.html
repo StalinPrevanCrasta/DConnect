@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Driver Registration</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAt1jEi6h9ZMNFL5DreXXSQxXicdTtlIbI&libraries=places"></script>
+    <script src="/static/air-quality.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
+    <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="profile-pic">
+            <img src="/static/3135715.png" alt="Profile Picture">
+        </div>
+        <h2>{{data.username}}</h2>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('back_to_dashboard')}}'">Dashboard</a>
+        <a href="{{ url_for('posted_rides') }}">Posted Rides</a>
+        <a href="{{ url_for('booked_rides') }}">Booked Rides</a>
+        <a href="{{ url_for('selected_rides') }}">Selected Rides</a>
+        <a href="#">Account</a>
+        <a href="#">Settings</a>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('logout') }}'">Logout</a>
+    </div>
+    <button class="weather-button" onclick="toggleDropdown()">Weather & Air Quality</button>
+    <div class="dropdown" id="dropdownContent">
+        <p>Loading...</p>
+    </div>
+    <form enctype="multipart/form-data" action="{{ url_for('post_ride') }}" method="post">
+        <h1>Enter vehicle details:</h1>
+        <label for="vehicleNumber">Vehicle Number:</label>
+        <input type="text" id="vehicleNumber" name="vehicleNumber" required><br><br>
+        
+        <label for="vehicleModel">Vehicle Model:</label>
+        <input type="text" id="vehicleModel" name="vehicleModel" required><br><br>
+        
+        <label for="photo">Upload Photo:</label>
+        <input type="file" id="photo" name="photo"><br><br>
+        
+        <h1>Enter ride details:</h1>
+        <label for="ac">AC:</label>
+        <select id="ac" name="ac">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select><br><br>
+        
+        <label for="vacantSeats">Number of vacant seats:</label>
+        <select id="vacantSeats" name="vacantSeats">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+        </select><br><br>
+        
+        <label for="startPoint">Start point:</label>
+        <input type="text" id="startPoint" name="startPoint" required><br><br>
+        
+        <label for="endPoint">End point:</label>
+        <input type="text" id="endPoint" name="endPoint" required><br><br>
+        
+        <label for="startTime">Start time:</label>
+        <input type="time" id="startTime" name="startTime" required><br><br>
+
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required><br><br>
+        
+        <label for="phonenumber">Phone number:</label>
+        <input type="tel" id="phonenumber" name="phonenumber" placeholder="0123456789" pattern="[0-9]{10}" required oninput="this.value=this.value.replace(/[^0-9]/g,'');"><br><br>
+        
+        <label for="price" id="price-label">Enter Price:</label>
+        <input type="text" id="price" name="price" required onfocus="prependRupeeSymbol()" oninput="ensureRupeeSymbol(); this.value=this.value.replace(/[^₹0-9]/g,'');" onkeydown="handleBackspace(event)">
+        
+        <script>
+            function prependRupeeSymbol() {
+                let input = document.getElementById('price');
+                if (!input.value.startsWith('₹')) {
+                    input.value = '₹' + input.value;
+                }
+            }
+            
+            function ensureRupeeSymbol() {
+                let input = document.getElementById('price');
+                if (!input.value.startsWith('₹')) {
+                    input.value = '₹' + input.value.replace('₹', '');
+                }
+            }
+            
+            function handleBackspace(event) {
+                let input = document.getElementById('price');
+                if (event.key === 'Backspace' && input.selectionStart <= 1) {
+                    event.preventDefault();
+                }
+            }
+            
+            document.getElementById('price').addEventListener('focus', function() {
+                let input = this;
+                if (input.value === '') {
+                    input.value = '₹';
+                }
+                setTimeout(function() {
+                    input.setSelectionRange(1, 1);
+                }, 0);
+            });
+        </script>
+        
+        
+        <input type="submit" value="Post">
+    </form>
+    <script>
+        function initAutocomplete() {
+            // Create the autocomplete object, restricting the search to geographical location types.
+            var startPoint = new google.maps.places.Autocomplete(
+            document.getElementById('startPoint'),
+            {types: ['geocode']}
+            );
+            
+            var endPoint = new google.maps.places.Autocomplete(
+            document.getElementById('endPoint'),
+            {types: ['geocode']}
+            );
+        }
+        
+        // Call the function when the page is loaded
+        google.maps.event.addDomListener(window, 'load', initAutocomplete);
+    </script>
+    <script>       
+        const riderName = "{{ data.username }}"; // Assuming this is how you pass the username
+        
+        function sendLocationToServer(lat, lon) {
+            fetch('/update-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lon, rider_name: riderName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Location sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function fetchLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    enableHighAccuracy: true;
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    sendLocationToServer(lat, lon);
+                }, (error) => {
+                    console.error('Error fetching location:', error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000,
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+        
+        setInterval(fetchLocation, 5000); // Fetch location every 5 seconds
+        
+        window.onload = function() {
+            fetchLocation();
+        }
+    </script>
+</body>
+</html>

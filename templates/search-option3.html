@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Passenger Registration</title>
+    <link rel="stylesheet" href="/static/search-rides.css">
+    <script src="/static/air-quality.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="profile-pic">
+            <img src="/static/3135715.png" alt="Profile Picture">
+        </div>
+        <h2>{{data.username}}</h2>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('back_to_dashboard')}}'">Dashboard</a>
+        <a href="{{ url_for('posted_rides') }}">Posted Rides</a>
+        <a href="{{ url_for('booked_rides') }}">Booked Rides</a>
+        <a href="{{ url_for('selected_rides') }}">Selected Rides</a>
+        <a href="#">Account</a>
+        <a href="#">Settings</a>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('logout') }}'">Logout</a>
+    </div>
+    <button class="weather-button" onclick="toggleDropdown()">Weather & Air Quality</button>
+    <div class="dropdown" id="dropdownContent">
+        <p>Loading...</p>
+    </div>
+    <div class="form-container">
+        <h1>Search for Rides</h1>
+        <form class="search-container" action="/search-results3" method="post">
+            <input type="text" id="end_point" name="end_point" placeholder="Enter your destination">
+            <input type="date" id="date" name="date" required>
+            <button id="search-button" type="submit">Search</button>
+        </form>
+    </div>  
+    
+    <!-- Load the Google Places API library -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAt1jEi6h9ZMNFL5DreXXSQxXicdTtlIbI&libraries=places&callback=initAutocomplete" async defer></script>
+    
+    <script>
+        function initAutocomplete() {
+            // Existing autocomplete for destination
+            var autocompleteDestination = new google.maps.places.Autocomplete(
+            (document.getElementById('end_point')),
+            {types: ['geocode']}
+            );
+            
+            // Add autocomplete for starting point
+            var autocompleteStartingPoint = new google.maps.places.Autocomplete(
+            (document.getElementById('start_point')),
+            {types: ['geocode']}
+            );
+            
+            // Listener for destination autocomplete
+            autocompleteDestination.addListener('place_changed', function() {
+                var place = autocompleteDestination.getPlace();
+                console.log(place.name); // Use the place details
+            });
+            
+            // Listener for starting point autocomplete
+            autocompleteStartingPoint.addListener('place_changed', function() {
+                var place = autocompleteStartingPoint.getPlace();
+                console.log(place.name); // Use the place details
+            });
+        }
+        
+        // Optional: Add event listener for the search button if needed
+        document.getElementById('search-button').addEventListener('click', function() {
+            // Assuming you want to do something with the place data when the search button is clicked
+            // Note: This will not work as expected because 'autocomplete' is not defined in this scope.
+            // You'll need to adjust your logic to handle form submission and place data retrieval appropriately.
+        });
+    </script>
+    <script>       
+        const riderName = "{{ data.username }}"; // Assuming this is how you pass the username
+        
+        function sendLocationToServer(lat, lon) {
+            fetch('/update-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lon, rider_name: riderName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Location sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function fetchLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    enableHighAccuracy: true;
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    sendLocationToServer(lat, lon);
+                }, (error) => {
+                    console.error('Error fetching location:', error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000,
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+        
+        setInterval(fetchLocation, 5000); // Fetch location every 5 seconds
+        
+        
+        window.onload = function() {
+            fetchLocation();
+        }
+    </script>
+</body>
+</html>

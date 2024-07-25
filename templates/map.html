@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map View</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAt1jEi6h9ZMNFL5DreXXSQxXicdTtlIbI&libraries=geometry"></script>
+    <script>
+        let map, riderMarker, passengerMarker, destinationMarker, directionsService, directionsRenderer, geocoder;
+        
+        function initMap() {
+            const riderLocation = { lat: {{ rider_location[1] }}, lng: {{ rider_location[0] }} };
+            const passengerLocation = { lat: {{ passenger_location[1] }}, lng: {{ passenger_location[0] }} };
+            const destination = "{{ destination }}";  // Destination address
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 10,
+                center: riderLocation,
+                styles: [
+                {
+                        "elementType": "geometry",
+                        "stylers": [
+                            { "color": "#e0f7e9" }
+                        ]
+                    },
+                    {
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            { "color": "#4b6043" }
+                        ]
+                    },
+                    {
+                        "elementType": "labels.text.stroke",
+                        "stylers": [
+                            { "color": "#ffffff" }
+                        ]
+                    },
+                    {
+                        "featureType": "administrative",
+                        "elementType": "geometry.stroke",
+                        "stylers": [
+                            { "color": "#c2c7c3" }
+                        ]
+                    },
+                    {
+                        "featureType": "landscape.man_made",
+                        "elementType": "geometry.fill",
+                        "stylers": [
+                            { "color": "#f0f4f2" }
+                        ]
+                    },
+                    {
+                        "featureType": "landscape.natural",
+                        "elementType": "geometry.fill",
+                        "stylers": [
+                            { "color": "#d3e4d1" }
+                        ]
+                    },
+                    {
+                        "featureType": "poi",
+                        "elementType": "geometry",
+                        "stylers": [
+                            { "color": "#cfe6c9" }
+                        ]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "geometry",
+                        "stylers": [
+                            { "color": "#ffffff" }
+                        ]
+                    },
+                    {
+                        "featureType": "road.arterial",
+                        "elementType": "geometry",
+                        "stylers": [
+                            { "color": "#e7ece7" }
+                        ]
+                    },
+                    {
+                        "featureType": "road.highway",
+                        "elementType": "geometry",
+                        "stylers": [
+                            { "color": "#d0e2d8" }
+                        ]
+                    },
+                    {
+                        "featureType": "road.local",
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            { "color": "#717171" }
+                        ]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "geometry.fill",
+                        "stylers": [
+                            { "color": "#a5d4b0" }
+                        ]
+                    }
+                ]
+            });
+            
+            geocoder = new google.maps.Geocoder();
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                polylineOptions: {
+                    strokeColor: '#4285F4',  // Blue color for the polyline
+                    strokeOpacity: 0.8,
+                    strokeWeight: 6
+                }
+            });
+            
+            riderMarker = new google.maps.Marker({
+                position: riderLocation,
+                map: map,
+                title: "Rider Location",
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 0110 10c0 5.5-10 10-10 10S2 17.5 2 12A10 10 0 0112 2z" fill="#FF0000"/></svg>'
+                }
+            });
+            
+            passengerMarker = new google.maps.Marker({
+                position: passengerLocation,
+                map: map,
+                title: "Passenger Location",
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 0110 10c0 5.5-10 10-10 10S2 17.5 2 12A10 10 0 0112 2z" fill="#0000FF"/></svg>'
+                }
+            });
+
+            geocodeAddress(destination);
+            
+            calculateAndDisplayRoute();
+            
+            setInterval(fetchAndUpdateLocations, 5000);
+        }
+        
+        function calculateAndDisplayRoute() {
+            const waypoints = [
+                {
+                    location: { lat: {{ passenger_location[1] }}, lng: {{ passenger_location[0] }} },
+                    stopover: true
+                }
+            ];
+            directionsService.route({
+                origin: { lat: {{ rider_location[1] }}, lng: {{ rider_location[0] }} },
+                destination: "{{ destination }}",  // Use the destination address here
+                waypoints: waypoints,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (response, status) => {
+                if (status === google.maps.DirectionsStatus.OK) {
+                    directionsRenderer.setDirections(response);
+                } else {
+                    console.error('Directions request failed due to ' + status);
+                }
+            });
+        }
+        
+        function fetchAndUpdateLocations() {
+            const riderId = "{{ rider_id }}";
+            const passengerId = "{{ passenger_id }}";
+            fetch(`/get-locations?rider_id=${riderId}`)
+            .then(response => response.json())
+            .then(data => {
+                const riderLocation = new google.maps.LatLng(data.rider_location.lat, data.rider_location.lng);
+                const passengerLocation = new google.maps.LatLng(data.passenger_location.lat, data.passenger_location.lng);
+                
+                riderMarker.setPosition(riderLocation);
+                passengerMarker.setPosition(passengerLocation);
+
+                // Update route only if the locations have changed significantly
+                if (hasLocationChanged(riderMarker.getPosition(), riderLocation) || hasLocationChanged(passengerMarker.getPosition(), passengerLocation)) {
+                    calculateAndDisplayRoute();
+                }
+
+                // Check if the markers are close to each other and the destination
+                if (checkProximity(riderLocation, passengerLocation) || checkProximity(riderLocation, destinationMarker.getPosition()) || checkProximity(passengerLocation, destinationMarker.getPosition())) {
+                    window.location.href = `/feedback/${riderId}/${passengerId}`;  // Redirect to the new page
+                }
+            })
+            .catch(error => console.error('Error fetching locations:', error));
+        }
+
+        function hasLocationChanged(oldLocation, newLocation) {
+            return oldLocation.lat() !== newLocation.lat() || oldLocation.lng() !== newLocation.lng();
+        }
+        
+        function geocodeAddress(address) {
+            geocoder.geocode({ address: address }, (results, status) => {
+                if (status === 'OK') {
+                    destinationMarker = new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location,
+                        title: "Destination",
+                        icon: {
+                            url: 'data:image/svg+xml;charset=UTF-8,<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 0110 10c0 5.5-10 10-10 10S2 17.5 2 12A10 10 0 0112 2z" fill="#00FF00"/></svg>'
+                        }
+                    });
+                } else {
+                    console.error('Geocode was not successful for the following reason: ' + status);
+                }
+            });
+        }
+        
+        function checkProximity(location1, location2) {
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(location1, location2);
+            return distance < 50;  // Check if the distance is less than 50 meters
+        }
+
+        const riderName = "{{ data.username }}";
+        
+        function sendLocationToServer(lat, lon) {
+            fetch('/update-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lon, rider_name: riderName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Location sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function fetchLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    enableHighAccuracy: true;
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    sendLocationToServer(lat, lon);
+                }, (error) => {
+                    console.error('Error fetching location:', error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000,
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+        
+        setInterval(fetchLocation, 5000);
+        
+        window.onload = function() {
+            fetchLocation();
+        }
+    </script>
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f2;
+        }
+    </style>
+</head>
+<body onload="initMap()">
+    <div id="map"></div>
+</body>
+</html>

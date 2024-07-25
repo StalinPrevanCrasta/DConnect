@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Feedback</title>
+    <style>
+        :root {
+            --primary-color: #007b7b;
+            --star-color: #f2b600;
+            --star-size: 30px;
+            --font-family: 'Arial', sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: var(--font-family);
+            margin: 0;
+            height: 100vh;
+            background-color: #E0F7F7;;
+        }
+        form {
+            background: rgb(9, 43, 72);;
+            padding: 40px;
+            padding-right: 60px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .logo {
+            margin-left: 25px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-left: 25px;
+            color: white;
+            margin-bottom: 10px;
+        }
+        p {
+            margin-left: 25px;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .star-rating {
+            margin-left: 25px;
+            direction: rtl;
+            font-size: var(--star-size);
+            display: inline-flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+        .star-rating label {
+            color: #bbb;
+            font-size: 30px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input[type="radio"]:checked ~ label {
+            color: var(--star-color);
+            transform: scale(1.2);
+            font-size: 30px;
+        }
+        .star-rating label:hover ~ label {
+            transform: none;
+        }
+        .rating-container {
+            margin-bottom: 20px;
+        }
+        .feedback {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+        }
+        .feedback:focus {
+            border-color: #aaa;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            margin-left: 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        button i {
+            font-size: 18px;
+            margin-right: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        button:hover i {
+            transform: scale(1.2);
+        }
+        button:active {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body>
+    <form id="feedbackForm">
+        <img src="/static/WhatsApp Image 2024-07-05 at 12.15.36.jpeg" alt="Company Logo" class="logo">
+        <h1>We hope your ride went well</h1>
+        <p>Please rate {{ data.username }} based on your satisfaction</p>
+        <div class="star-rating">
+            <input type="radio" id="5-stars" name="rating" value="5"><label for="5-stars">&#9733;</label>
+            <input type="radio" id="4-stars" name="rating" value="4"><label for="4-stars">&#9733;</label>
+            <input type="radio" id="3-stars" name="rating" value="3"><label for="3-stars">&#9733;</label>
+            <input type="radio" id="2-stars" name="rating" value="2"><label for="2-stars">&#9733;</label>
+            <input type="radio" id="1-star" name="rating" value="1"><label for="1-star">&#9733;</label>
+        </div>
+        <textarea class="feedback" id="feedback" placeholder="Leave your FEEDBACK here... "></textarea>
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        document.getElementById('feedbackForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            var ratingSelected = document.querySelector('input[name="rating"]:checked');
+            var feedback = document.getElementById('feedback').value.trim();
+            var username = "{{ data.username }}"; // Ensure this is passed correctly from backend
+            
+            if (!ratingSelected) {
+                alert('Please select a rating.');
+            } else if (!feedback) {
+                alert('Please enter your feedback.');
+            } else {
+                var rating = parseInt(ratingSelected.value);
+                
+                fetch('/feedback-of-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: username, rating: rating, feedback: feedback }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Thank you for your feedback!');
+                        window.location.reload();
+                    } else {
+                        alert('There was an error submitting your feedback. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('There was an error submitting your feedback. Please try again.');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

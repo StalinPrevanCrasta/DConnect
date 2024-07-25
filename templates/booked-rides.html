@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
+    <title>Booked Rides</title>
+    <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="profile-pic">
+            <img src="/static/3135715.png" alt="Profile Picture">
+        </div>
+        <h2>{{ data.username }}</h2>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('back_to_dashboard')}}'">Dashboard</a>
+        <a href="{{ url_for('posted_rides') }}">Posted Rides</a>
+        <a href="{{ url_for('booked_rides') }}">Booked Rides</a>
+        <a href="{{ url_for('selected_rides') }}">Selected Rides</a>
+        <a href="#">Account</a>
+        <a href="#">Settings</a>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('logout') }}'">Logout</a>
+    </div>
+    <div id="ridesForm">
+        <h2>Booked Rides</h2>
+        <ul>
+            {% for ride in rides %}
+            <li>
+                <form action="/show-rider-map" method="post" class="seats-form" style="margin: 1px 10px 40px 15px; width: 750px;">
+                    <div class="rider-profile">
+                        <img src="/static/3135789.png" alt="Rider Photo">
+                        <span class="rider-name">{{ ride.passenger_name }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Booked Seats:</label>
+                        <span>{{ ride.booked_seats }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Start Point:</label>
+                        <span>{{ ride.start_point }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>End Point:</label>
+                        <span>{{ ride.end_point }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Start Time:</label>
+                        <span>{{ ride.start_time }}</span>
+                    </div>
+                    <input type="hidden" name="passenger_id" value="{{ ride.passenger_id }}">
+                    <button type="submit" style="margin-left: 300px; margin-top: 20px;">Show Map</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <script>       
+        const riderName = "{{ data.username }}"; // Assuming this is how you pass the username
+        
+        function sendLocationToServer(lat, lon) {
+            fetch('/update-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lon, rider_name: riderName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Location sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function fetchLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    enableHighAccuracy: true;
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    sendLocationToServer(lat, lon);
+                }, (error) => {
+                    console.error('Error fetching location:', error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000, // Increased timeout for better accuracy
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+        
+        setInterval(fetchLocation, 5000); // Fetch location every 5 seconds
+        
+        
+        window.onload = function() {
+            fetchLocation();
+        }
+    </script>
+</body>
+</html>

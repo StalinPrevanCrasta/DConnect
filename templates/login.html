@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <img src="/static/WhatsApp Image 2024-07-05 at 12.15.36.jpeg" alt="Welcome Image" class="welcome-image">
+    <div class="title">Hello👋, Welcome to DConnect!</div>
+    <div class="tagline">Connecting Destinations</div>
+    <div class="instruction">Should you be an existing user, we invite you to log in, otherwise, you're welcome to sign up as a novice to avail our services.</div>
+    {% if message %}
+    <h3 style="color: red; padding-left: 40%;">{{ message }}</h3>
+    {% endif %}
+    <div class="container">
+        <div id="login-form">
+            <h2>Login</h2>
+            <form action="/login" method="post">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required><br><br>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required><br><br>
+                <button type="submit">Login</button>
+                <button type="button" onclick="window.location.href='{{ url_for('signup_page') }}'">Signup</button>
+
+            </form>
+        </div>
+    </div>
+</body>
+</html>

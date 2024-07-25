@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Rides</title>
+    <link rel="stylesheet" href="/static/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
+    <script src="/static/air-quality.js"></script>
+    <!-- Include FontAwesome CDN for star icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        
+        .star-rating {
+            display: inline-flex;
+            font-size: 25px;
+            color: #f2b600;
+        }
+        .star-rating .fa-star,
+        .star-rating .fa-star-o {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="profile-pic">
+            <img src="/static/3135715.png" alt="Profile Picture">
+        </div>
+        <h2>{{ data.username }}</h2>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('back_to_dashboard')}}'">Dashboard</a>
+        <a href="{{ url_for('posted_rides') }}">Posted Rides</a>
+        <a href="{{ url_for('booked_rides') }}">Booked Rides</a>
+        <a href="{{ url_for('selected_rides') }}">Selected Rides</a>
+        <a href="#">Account</a>
+        <a href="#">Settings</a>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('logout') }}'">Logout</a>
+    </div>
+    <button class="weather-button" onclick="toggleDropdown()">Weather & Air Quality</button>
+    <div class="dropdown" id="dropdownContent">
+        <p>Loading...</p>
+    </div>
+    <div class="rides-form" id="ridesForm">
+        <h2>Available Rides</h2>
+        <ul>
+            {% for ride in rides %}
+            <li>
+                <div>
+                    <form action="/seat-booking" method="post" class="seats-form" style="margin: 1px 10px 40px 15px;">
+                    <img src="/static/3135789.png" alt="Rider Photo" style="width: 100px;">
+                    <span class="rider-name">{{ ride.rider_name }}</span>
+                    <div class="star-rating">
+                        {% for i in range(1, 6) %}
+                        <span class="fa {% if i <= ride.rating %}fa-star{% else %}fa-star-o{% endif %}"></span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="ride-info">
+                    <label>Vehicle Number:</label>
+                    <span>{{ ride.vehicle_no }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>Vehicle Model:</label>
+                    <span>{{ ride.vehicle_model }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>Vehicle Photo:</label>
+                    <img src="{{ url_for('get_photo', photo_id=ride.vehicle_photo_id) }}" alt="Vehicle Photo">
+                </div>
+                <div class="ride-info">
+                    <label>AC:</label>
+                    <span>{{ ride.ac }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>Vacant Seats:</label>
+                    <span>{{ ride.vacant_seats }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>Start Point:</label>
+                    <span>{{ ride.start_point }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>End Point:</label>
+                    <span>{{ ride.end_point }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>Date:</label>
+                    <span>{{ ride.date }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>Start Time:</label>
+                    <span>{{ ride.start_time }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>Price:</label>
+                    <span>{{ ride.price }}</span>
+                </div>
+                <div class="ride-info">
+                    <label>Phone Number:</label>
+                    <span>{{ ride.phone_number }}</span>
+                </div>
+                {% if ride.vacant_seats == 0 %}
+                <p style="color: red; padding-left: 45%;">Seats Full</p>
+                {% endif %}
+                    <input type="hidden" name="rider_id" value="{{ ride.rider_id }}">
+                    <input type="hidden" name="rider_name" value="{{ ride.rider_name }}">
+                    <input type="hidden" name="vehicle_number" value="{{ ride.vehicle_number }}">
+                    <input type="hidden" name="vehicle_model" value="{{ ride.vehicle_model }}">
+                    <input type="hidden" name="ac" value="{{ ride.ac }}">
+                    <input type="hidden" name="date" value="{{ ride.date }}">
+                    <input type="hidden" name="vacant_seats" value="{{ ride.vacant_seats }}">
+                    <input type="hidden" name="start_point" value="{{ ride.start_point }}">
+                    <input type="hidden" name="end_point" value="{{ ride.end_point }}">
+                    <input type="hidden" name="start_time" value="{{ ride.start_time }}">
+                    <input type="hidden" name="vehicle_photo_id" value="{{ ride.vehicle_photo_id }}">
+                    <label for="booked_seats" style="font-size: 20px;">Enter the number of seats you want to book:</label>
+                    <input style="max-width: 150px;"type="number" name="booked_seats" id="booked_seats" style="height: 20px; width: 300px;" {% if ride.vacant_seats == 0 %}disabled{% endif %}>
+                    <button type="submit" style="margin-left: 250px; margin-top: 20px;" {% if ride.vacant_seats == 0 %}disabled{% endif %}>Book Seats and Pay</button>
+                </form>
+                {% endfor %}
+            </li>
+            {% if message %}
+            <h3 style="color: red; padding-left: 40%;">{{ message }}</h3>
+            {% endif %}
+        </ul>
+    </div>
+    <script>
+        const riderName = "{{ data.username }}"; // Assuming this is how you pass the username
+        
+        function sendLocationToServer(lat, lon) {
+            fetch('/update-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lon, rider_name: riderName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Location sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function fetchLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    enableHighAccuracy: true;
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    sendLocationToServer(lat, lon);
+                }, (error) => {
+                    console.error('Error fetching location:', error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000,
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+        
+        setInterval(fetchLocation, 5000); // Fetch location every 5 seconds
+        
+        window.onload = function() {
+            fetchLocation();
+        }
+    </script>
+</body>
+</html>

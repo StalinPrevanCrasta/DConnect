@@ -1,0 +1,113 @@
+body {
+    font-family: 'Segoe UI', Tahoma, 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif, Verdana, sans-serif;
+    background-color: #E0f7F7; /* Lighter background for a modern look */
+}
+
+.container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #F5FAFA; /* Light background for the form */
+    border-radius: 15px; /* More rounded corners */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Softer shadow */
+    border: none; /* Remove border */
+    opacity: 1; /* Start visible */
+    transform: scale(1); /* Start at normal scale */
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333333; /* Darker color for better contrast */
+    font-weight: 600; /* Make the title bolder */
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    color: #333; /* Darker color for better readability */
+    font-weight: 500; /* Slightly bolder labels */
+}
+
+input[type="text"],
+input[type="password"] {
+    width: calc(100% - 20px); /* Adjust width */
+    padding: 12px;
+    margin-bottom: 15px; /* Add space between inputs */
+    border: 1px solid #ccc; /* Lighter border */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle inner shadow */
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: #009999; /* Highlight focus with a blue border */
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Glow effect on focus */
+}
+
+button {
+    padding: 10px;
+    background-color: #007B7B; /* Modern blue */
+    color: white;
+    border: none;
+    border-radius: 8px; /* Rounded corners */
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    /* make both the buttons one line */
+    display: inline-block;
+    margin-left: 12px;
+    width: 45%;
+}
+
+button:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
+.title {
+    text-align: center;
+    color: #010101;
+    font-size: 35px;
+    margin-top: 50px; /* Added padding at the top */
+    /* make bold */
+    font-weight: bold;
+}
+
+.tagline {
+    text-align: center;
+    color: #010101;
+    font-size: 20px;
+    margin-bottom: 35px;
+    /* make bold and italic */
+    font-weight: bold;
+    font-style: italic;
+}
+
+.instruction {
+    text-align: center;
+    color: black;
+    font-size: 20px;
+    margin-bottom: 30px;
+    width: 750px; 
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.signup-form {
+    display: none;
+}
+
+/* Smooth transition for form switching */
+.container {
+    transition: opacity 0.5s ease;
+}
+
+.welcome-image {
+    display: block;
+    max-width: 150px; /* Make the image smaller */
+    height: 150px; /* Maintains the aspect ratio */
+    margin: 20px auto 30px; /* Adds some space around the image */
+    border-radius: 50%; /* Makes the image round */
+    margin-top: 50px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds a modern shadow effect */
+}

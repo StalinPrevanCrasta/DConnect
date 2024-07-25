@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
+    <title>My Selected Rides</title>
+    <style>
+        /* Additional styles to improve appearance */
+        .rides-form {
+            margin-left: 100px;
+            width: 100%;
+            height: 450px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .rides-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #333;
+        }
+        .rides-form ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .rides-form li {
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+        }
+        .rides-form li:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .rider-profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .rider-profile img {
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+        }
+        .rider-name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .ride-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .ride-info label {
+            font-weight: bold;
+            color: #555;
+        }
+        .ride-info span {
+            color: #777;
+        }
+        .action-form {
+            display: flex;
+            gap: 10px; /* Adds space between the buttons */
+            margin-top: 20px;
+        }
+        .action-form button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .action-form button:hover {
+            background-color: #45a049;
+        }
+        .action-form button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="profile-pic">
+            <img src="/static/3135715.png" alt="Profile Picture">
+        </div>
+        <h2>{{ data.username }}</h2>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('back_to_dashboard')}}'">Dashboard</a>
+        <a href="{{ url_for('posted_rides') }}">Posted Rides</a>
+        <a href="{{ url_for('booked_rides') }}">Booked Rides</a>
+        <a href="{{ url_for('selected_rides') }}">Selected Rides</a>
+        <a href="#">Account</a>
+        <a href="#">Settings</a>
+        <a style='cursor: pointer;' onclick="window.location.href='{{ url_for('logout') }}'">Logout</a>
+    </div>
+    <div id="ridesForm">
+        <h2 style="margin-left: 400px;">My Selected Rides</h2>
+        <ul>
+            {% for ride in rides %}
+            <li>
+                <form action="/ride-action" method="post" class="rides-form">
+                    <div class="rider-profile">
+                        <img src="/static/3135789.png" alt="Rider Photo">
+                        <span class="rider-name">{{ ride.rider_name }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Vehicle Number:</label>
+                        <span>{{ ride.vehicle_no }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Vehicle Model:</label>
+                        <span>{{ ride.vehicle_model }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Vehicle Photo:</label>
+                        <img src="{{ url_for('get_photo', photo_id=ride.vehicle_photo_id) }}" alt="Vehicle Photo">
+                    </div>
+                    <div class="ride-info">
+                        <label>AC:</label>
+                        <span>{{ ride.ac }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Vacant Seats:</label>
+                        <span>{{ ride.vacant_seats }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Start Point:</label>
+                        <span>{{ ride.start_point }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>End Point:</label>
+                        <span>{{ ride.end_point }}</span>
+                    </div>
+                    <div class="ride-info">
+                        <label>Start Time:</label>
+                        <span>{{ ride.start_time }}</span>
+                    </div>
+                    <input type="hidden" name="rider_id" value="{{ ride.rider_id }}">
+                    <input type="hidden" name="passenger_id" value="{{ ride.passenger_id }}">
+                    <input type="hidden" name="vehicle_no" value="{{ ride.vehicle_no }}">
+                    <input type="hidden" name="start_point" value="{{ ride.start_point }}">
+                    <input type="hidden" name="end_point" value="{{ ride.end_point }}">
+                    <input type="hidden" name="start_time" value="{{ ride.start_time }}">
+                    <input type="hidden" name="vacant_seats" value="{{ ride.vacant_seats }}">
+                    <input type="hidden" name="date" value="{{ ride.date }}">
+                    <div class="action-form">
+                        <button type="submit" name="action" value="show_map">Show Map</button>
+                        <button type="submit" name="action" value="cancel_ride">Cancel Ride</button>
+                    </div>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <script>       
+        const riderName = "{{ data.username }}";
+        
+        function sendLocationToServer(lat, lon) {
+            fetch('/update-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lon, rider_name: riderName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Location sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function fetchLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    sendLocationToServer(lat, lon);
+                }, (error) => {
+                    console.error('Error fetching location:', error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000,
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+        
+        setInterval(fetchLocation, 5000);
+        
+        window.onload = function() {
+            fetchLocation();
+        }
+    </script>
+</body>
+</html>

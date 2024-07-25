@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Page</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/payment.css">
+</head>
+<body>
+    <body>
+        <div class="container">
+            <form id="paymentForm">
+                <h1>Payment for Ride</h1>
+                <div class="row">
+                    <div class="col">
+                        <div class="inputBox">
+                            <label>Rider</label>
+                            <p>{{ rider['rider_name'] }}</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="inputBox">
+                            <label>Seats</label>
+                            <p>{{ booked_seats }}</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="inputBox">
+                            <label>Amount</label>
+                            <p>₹{{ order['amount'] / 100 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="rzp-button1" class="submit_btn">Pay with Razorpay</button>
+            </form>
+        </div>
+    <script>
+        var options = {
+            "key": "rzp_test_bIk1nwHWWgKw8n", // Replace with your Razorpay API key
+            "amount": "{{ order['amount'] }}",
+            "currency": "INR",
+            "name": "DConnect",
+            "description": "Seat Booking Payment",
+            "image": "/static/WhatsApp Image 2024-07-05 at 12.15.36.jpeg",
+            "order_id": "{{ order['id'] }}",
+            "callback_url": `/payment-success/{{ rider_id }}/{{ user_id }}/{{ start_point }}/{{ end_point }}/{{ start_time }}/{{ date }}`,
+            "prefill": {
+                "name": "{{ user['username'] }}",
+                "email": "sc@example.com",
+                "contact": "+91 9987654321"
+            },
+            "theme": {
+                "color": "#5cffab"
+            },
+            "handler": function (response){
+                document.getElementById('paymentForm').action = `/payment-success/{{ rider_id }}/{{ user_id }}/{{ start_point }}/{{ end_point }}/{{ start_time }}/{{ date }}`;
+                document.getElementById('paymentForm').method = 'POST';
+
+                var payment_id_input = document.createElement('input');
+                payment_id_input.type = 'hidden';
+                payment_id_input.name = 'razorpay_payment_id';
+                payment_id_input.value = response.razorpay_payment_id;
+                document.getElementById('paymentForm').appendChild(payment_id_input);
+
+                var order_id_input = document.createElement('input');
+                order_id_input.type = 'hidden';
+                order_id_input.name = 'razorpay_order_id';
+                order_id_input.value = response.razorpay_order_id;
+                document.getElementById('paymentForm').appendChild(order_id_input);
+
+                var signature_input = document.createElement('input');
+                signature_input.type = 'hidden';
+                signature_input.name = 'razorpay_signature';
+                signature_input.value = response.razorpay_signature;
+                document.getElementById('paymentForm').appendChild(signature_input);
+
+                var booked_seats_input = document.createElement('input');
+                booked_seats_input.type = 'hidden';
+                booked_seats_input.name = 'booked_seats';
+                booked_seats_input.value = "{{ booked_seats }}";
+                document.getElementById('paymentForm').appendChild(booked_seats_input);
+
+                document.getElementById('paymentForm').submit();
+            }
+        };
+
+        var rzp1 = new Razorpay(options);
+
+        document.getElementById('rzp-button1').onclick = function(e) {
+            rzp1.open();
+            e.preventDefault();
+        }
+    </script>
+</body>
+</html>
