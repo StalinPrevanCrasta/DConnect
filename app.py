@@ -20,10 +20,10 @@ socketio = SocketIO(app)
 import razorpay
 
 # Initialize Razorpay client
-razorpay_client = razorpay.Client(auth=("rzp_test_bIk1nwHWWgKw8n", "itfoQl2RhxgTFElnhf1kqgYZ"))
+razorpay_client = razorpay.Client(auth=(""))
 
 # MongoDB connection
-client = MongoClient('mongodb+srv://jeston-admin:jeston123@cluster0.rhokplb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
+client = MongoClient('mongodb+srv://test:<db_password>@cluster0.xcpssoq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
 db = client['loginapp']
 users_collection = db['users']
 postride_collection = db['post-rides']
